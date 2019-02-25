@@ -153,7 +153,7 @@ case $flag in
     fi
 
     echo "==> 正在使用check50检查作业："
-    check50 cs50/${year}/spring/scratch | tee  ~/.submit50/check.tmp
+    check50 cs50/${year}/x/scratch | tee  ~/.submit50/check.tmp
     passed=$(cat ~/.submit50/check.tmp | grep ":)" | wc -l)
     warnings=$(cat ~/.submit50/check.tmp | grep ":|" | wc -l)
     errors=$(cat ~/.submit50/check.tmp | grep ":(" | wc -l)
