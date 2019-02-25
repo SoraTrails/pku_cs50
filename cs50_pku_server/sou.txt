@@ -1,0 +1,2 @@
+export FLASK_APP=application
+export API_KEY=3NYODPEK1ISAYN9H
