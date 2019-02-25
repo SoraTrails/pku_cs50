@@ -1,5 +1,5 @@
 #! /bin/bash
-version=(1 1)
+version=(1 2)
 # set -e
 
 input_name_id(){
