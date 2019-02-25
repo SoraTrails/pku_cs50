@@ -1,5 +1,10 @@
 #! /bin/bash
 version=(1 2)
+# 修改版本需要三步：
+# pku_submit50.sh中的version
+# rz提交，运行build.sh
+# 修改server中的version
+
 # set -e
 
 input_name_id(){
