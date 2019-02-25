@@ -1,5 +1,5 @@
 #! /bin/bash
-version=(1 0)
+version=(1 1)
 # set -e
 
 input_name_id(){
@@ -15,11 +15,16 @@ input_name_id(){
         read name
     done
     echo $name > ~/.submit50/config
-    
+
     echo -n "学号:"
     read stuid
     while [ ${stuid}x = x ]; do
         echo "<错误> 输入学号不能为空"
+        echo -n "学号:"
+        read stuid
+    done
+    while [[ ${#stuid} -ne 10 || ${stuid:0:1} != '1' ]] || [[ -z "`echo ${stuid} | sed -n '/^[0-9][0-9]*$/p'`" ]] ;do
+        echo "<错误> 学号格式有误"
         echo -n "学号:"
         read stuid
     done
@@ -38,11 +43,18 @@ login(){
         echo -n "[按下ENTER键继续或者输入任意字符确定后重新输入] "
         read flag
         if [ ${flag}x = x ];then
-            break
+            if [[ ${#stuid} -ne 10 || ${stuid:0:1} != '1' ]] || [[ -z "`echo ${stuid} | sed -n '/^[0-9][0-9]*$/p'`" ]] ;then
+                echo "<错误> 学号格式有误"
+                input_name_id
+            else
+                break
+            fi
         else
             input_name_id
         fi
     done
+
+
 }
 
 update(){
@@ -68,7 +80,7 @@ update(){
         echo "==> 更新完成，请重新运行本程序"
         rm -f /tmp/cs50_pku_version
         exit
-    else 
+    else
         echo "==> 已经是最新版本！"
         rm -f /tmp/cs50_pku_version
     fi
@@ -82,7 +94,7 @@ upload(){
     fi
 }
 
-echo "submit50 for pkuers, version :${version}.0"
+echo "submit50 for pkuers, version :${version[0]}.${version[1]}"
 echo "使用帮助：pku_submit50 [作业所在文件夹路径，默认当前路径]"
 login
 name=`sed -n 1p ~/.submit50/config`
@@ -107,7 +119,7 @@ case $flag in
         path=`pwd`
     fi
 
-    tmp=$(find $path -maxdepth 1 -name "*.sb[2-3]" 2> /dev/null)                                          
+    tmp=$(find $path -maxdepth 1 -name "*.sb[2-3]" 2> /dev/null)
     if [ -z "${tmp}" ];then
         echo "<错误> 未在路径 ${path} 下找到sb2或sb3文件，请重新指定路径"
         exit
@@ -147,7 +159,7 @@ case $flag in
     errors=$(cat ~/.submit50/check.tmp | grep ":(" | wc -l)
     if [ $warnings = 0 -a $errors = 0 -a $passed = 0 ];then
         echo "<错误> 使用check50检查失败，请稍后重试"
-        exit    
+        exit
     fi
     echo "==> 您本次检测结果如下: ";echo
     echo -e "\033[32m [Passed]    $passed \033[0m"
@@ -182,33 +194,33 @@ case $flag in
         zip -P "$zippwd" -j ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip ~/.submit50/tmp/* > /dev/null
         rm -rf ~/.submit50/tmp/
         echo "==> 打包完成，正在上传"
-        upload ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip 
+        upload ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip
         echo "==> 上传完毕"
         #，这是您对作业${problem_num}的第${num}次提交
         rm -f ~/.submit50/check.tmp
         exit
-    else 
+    else
         rm -f ~/.submit50/check.tmp
         exit
     fi
 ;;
-2) 
+2)
     echo "<错误> 尚未布置该作业"
     exit
 ;;
-3) 
+3)
     echo "<错误> 尚未布置该作业"
     exit
 ;;
-4) 
+4)
     echo "<错误> 尚未布置该作业"
     exit
 ;;
-5) 
+5)
     echo "<错误> 尚未布置该作业"
     exit
 ;;
-*) 
+*)
     echo "<错误> 不合法的输入"
     exit
 ;;
