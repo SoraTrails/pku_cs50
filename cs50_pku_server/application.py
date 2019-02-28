@@ -30,7 +30,8 @@ def after_request(response):
     return response
 
 # Custom filter
-app.jinja_env.filters["usd"] = usd
+# app.jinja_env.filters["usd"] = usd
+app.jinja_env.auto_reload = True
 
 # Configure session to use filesystem (instead of signed cookies)
 app.config["SESSION_FILE_DIR"] = mkdtemp()
@@ -42,6 +43,7 @@ Session(app)
 db = SQL("sqlite:///finance.db")
 
 UPLOAD_FOLDER = '/root/submited_works'
+# UPLOAD_FOLDER = 'submited_works'
 ALLOWED_EXTENSIONS = set(['zip'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024
@@ -54,6 +56,10 @@ def allowed_file(filename):
 def index():
     return render_template("index.html")
 
+# @app.route("/")
+# def red():
+#     return redirect("hackathon")
+
 @app.route("/about")
 def about():
     return render_template("about.html")
@@ -63,7 +69,7 @@ def version():
     if request.method == 'POST':
         stuid = request.form.get("stuid")
         name = request.form.get("name")
-        #TODO: check stuid & name (check_stuid 语法上已实现)
+        #TODO: check stuid & name (check_stuid 语法上已实现);
         #TODO: log
         # print("get version :{}_{}".format(stuid,name))
         return send_from_directory("/root/submited_works","version", as_attachment=True)
@@ -83,17 +89,23 @@ def upload():
         #TODO: post data加入作业号以验证？
         if file and allowed_file(file.filename):
             # filename = secure_filename(file.filename)
-            filename = file.filename
-            names=filename.split('_')
-            stuid=names[0]
-            stuname=names[1]
-            work=names[2]
+            stuid = request.form.get("stuid")
+            stuname = request.form.get("name")
+            work = request.form.get("work")
+            # filename = file.filename
+            # names=filename.split('_')
+            # if len(names) <= 2:
+                # return '<h1>name error</h1>', 406
+            # stuid=names[0]
+            # stuname=names[1]
+            # work=names[2]
             #TODO: check stuid & name
             path = os.path.join(app.config['UPLOAD_FOLDER'], work, stuid+"_"+stuname)
             if not os.path.exists(path):
                 os.makedirs(path)
             submitted=os.listdir(path)
-            filename=filename.replace(re.findall(r'(_[0-9]+.zip)', filename)[0], "_1.zip")
+            # filename=filename.replace(re.findall(r'(_[0-9]+.zip)', filename)[0], "_1.zip")
+            filename="{}_{}_{}_1.zip".format(stuid,stuname,work)
             if len(submitted) > 0:
                 num=[]
                 for p in submitted:
@@ -103,6 +115,9 @@ def upload():
                 return '<h1>Unknown error</h1>', 405
             file.save(os.path.join(path,filename))
             #TODO: log
+            if int(work) == 3:
+                print("{}_{}".format(stuid,stuname))
+
             return '<h1>Upload Succeeded</h1>', 200
         return '<h1>Bad File</h1>', 400
     return '<h1>Bad Request</h1>', 400

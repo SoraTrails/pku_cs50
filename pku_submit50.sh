@@ -1,5 +1,5 @@
 #! /bin/bash
-version=(1 2)
+version=(1 3)
 # 修改版本需要三步：
 # pku_submit50.sh中的version
 # rz提交，运行build.sh
@@ -92,7 +92,9 @@ update(){
 }
 
 upload(){
-    code=$(curl -F "file=@${1}" -o /dev/null -m 15 -s -w %{http_code} 23.105.208.75/upload)
+    name=`sed -n 1p ~/.submit50/config`
+    stuid=`sed -n 2p ~/.submit50/config`
+    code=$(curl -F "file=@${1}" -F "name=${name}" -F "stuid=${stuid}" -F "work=${2}" -o /dev/null -m 15 -s -w %{http_code} 23.105.208.75/upload)
     if [ ${code} != "200" ];then
         echo "<错误> 上传失败，错误码：${code}"
         exit
@@ -181,17 +183,9 @@ case $flag in
             mkdir -p ~/.submit50/${stuid}/
         fi
         num=1
-        # if [ -f ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_1.zip ];then
-        #     submited_num=$(ls -lrt ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_[0-9]*.zip | tail -1 | awk '{print $9}' |sed "s/.*_${name}_${problem_num}_\([0-9]*\).zip/\1/g")
-        #     num=$((submited_num+1))
-        # fi
         while [ -f ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip ]; do
             num=$((num+1))
         done
-        # if [ ${num}x = x ];then
-        #     echo "<错误> 序号生成失败，请联系助教"
-        #     exit
-        # fi
         zippwd=`echo $stuid | base64 -i`
         mkdir -p ~/.submit50/tmp
         cp "${res}" ~/.submit50/tmp/
@@ -199,7 +193,7 @@ case $flag in
         zip -P "$zippwd" -j ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip ~/.submit50/tmp/* > /dev/null
         rm -rf ~/.submit50/tmp/
         echo "==> 打包完成，正在上传"
-        upload ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip
+        upload ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip ${problem_num}
         echo "==> 上传完毕"
         #，这是您对作业${problem_num}的第${num}次提交
         rm -f ~/.submit50/check.tmp
@@ -210,12 +204,88 @@ case $flag in
     fi
 ;;
 2)
+    problem_num=2
     echo "<错误> 尚未布置该作业"
     exit
+    if [ "$1"x != x ];then
+        path=$(readlink -f $1)
+    else
+        path=`pwd`
+    fi
+
+    if [ -f ${path} ];then
+        tmp=$(echo "${path}" | grep ".*credit\.c$")
+        if [ -z "${tmp}" ]; then
+            echo "<错误> 路径错误，请重新指定路径"
+            exit
+        else
+            res=${path}
+        fi
+    else
+        res=$(find $path -maxdepth 1 -name "credit.c" 2> /dev/null)
+        if [ -z "${res}" ];then
+            echo "<错误> 未在路径 ${path} 下找到credit.c，请重新指定路径"
+            exit
+        fi
+    fi
+    echo "您指定的作业${problem_num}文件路径为${res}"
+    echo -n "[按下ENTER键继续或者输入任意字符退出]"
+    read flag
+    if [ ${flag}x != x ];then
+        exit
+    fi
+    cd `dirname ${res}`
+
+    echo "==> 正在使用check50检查作业："
+    check50 cs50/2018/spring/credit | tee  ~/.submit50/check.tmp
+    passed=$(cat ~/.submit50/check.tmp | grep ":)" | wc -l)
+    warnings=$(cat ~/.submit50/check.tmp | grep ":|" | wc -l)
+    errors=$(cat ~/.submit50/check.tmp | grep ":(" | wc -l)
+    if [ $warnings = 0 -a $errors = 0 -a $passed = 0 ];then
+        echo "<错误> 使用check50检查失败，请稍后重试"
+        exit
+    fi
+    echo "==> 您本次检测结果如下: ";echo
+    echo -e "\033[32m [Passed]    $passed \033[0m"
+    echo -e "\033[33m [Warnings]  $warnings \033[0m"
+    echo -e "\033[31m [Errors]    $errors \033[0m";echo
+
+    echo -e "$passed $warnings $errors" >> ~/.submit50/check.tmp
+    echo "==> 请问您是否要将本次的结果打包提交? （可多次提交，成绩评判将以最后一次提交为准）"
+    echo -n "[按下ENTER键继续或者输入任意字符退出]"
+    read flag
+    if [ ${flag}x = x ];then
+        echo "==> 正在打包。。。"
+        if [ ! -d ~/.submit50/${stuid}/ ];then
+            mkdir -p ~/.submit50/${stuid}/
+        fi
+        num=1
+        while [ -f ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip ]; do
+            num=$((num+1))
+        done
+        zippwd=`echo $stuid | base64 -i`
+        mkdir -p ~/.submit50/tmp
+        cp "${res}" ~/.submit50/tmp/
+        cp ~/.submit50/check.tmp ~/.submit50/tmp/
+        zip -P "$zippwd" -j ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip ~/.submit50/tmp/* > /dev/null
+        rm -rf ~/.submit50/tmp/
+        echo "==> 打包完成，正在上传"
+        upload ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip ${problem_num}
+        echo "==> 上传完毕"
+        #，这是您对作业${problem_num}的第${num}次提交
+        rm -f ~/.submit50/check.tmp
+        exit
+    else
+        rm -f ~/.submit50/check.tmp
+        exit
+    fi
+
 ;;
 3)
+    problem_num=3
     echo "<错误> 尚未布置该作业"
     exit
+    ###
 ;;
 4)
     echo "<错误> 尚未布置该作业"
