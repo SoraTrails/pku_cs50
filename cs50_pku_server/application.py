@@ -115,8 +115,9 @@ def upload():
                 return '<h1>Unknown error</h1>', 405
             file.save(os.path.join(path,filename))
             #TODO: log
-            if int(work) == 3:
-                print("{}_{}".format(stuid,stuname))
+            print("{}_{} submit hw{}".format(stuid, stuname, work))
+            # if int(work) == 3:
+                # print("{}_{}".format(stuid,stuname))
 
             return '<h1>Upload Succeeded</h1>', 200
         return '<h1>Bad File</h1>', 400
