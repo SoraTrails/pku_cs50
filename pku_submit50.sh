@@ -214,7 +214,7 @@ case $flag in
     fi
 
     if [ -f ${path} ];then
-        tmp=$(echo "${path}" | grep ".*credit\.c$")
+        tmp=$(echo "${path}" | grep ".*\/credit\.c$")
         if [ -z "${tmp}" ]; then
             echo "<错误> 路径错误，请重新指定路径"
             exit
@@ -285,7 +285,81 @@ case $flag in
     problem_num=3
     echo "<错误> 尚未布置该作业"
     exit
-    ###
+    if [ "$1"x != x ];then
+        path=$(readlink -f $1)
+    else
+        path=`pwd`
+    fi
+
+    if [ -f ${path} ];then
+        tmp=$(echo "${path}" | grep ".*\/dictionary\.[c|h]$")
+        if [ -z "${tmp}" ]; then
+            echo "<错误> 路径错误，请重新指定路径"
+            exit
+        else
+            res=($(find `dirname ${path}` -maxdepth 1 -name "dictionary.[c|h]" 2> /dev/null))
+        fi
+    else
+        res=($(find $path -maxdepth 1 -name "dictionary.[c|h]" 2> /dev/null))
+        if [ ${#res[@]} -ne 2 ];then
+            echo "<错误> 未在路径 ${path} 下找到dictionary.c和dictionary.h，请重新指定路径"
+            exit
+        fi
+    fi
+    echo "您指定的作业${problem_num}文件1路径为${res[0]}"
+    echo "您指定的作业${problem_num}文件2路径为${res[1]}"
+    echo -n "[按下ENTER键继续或者输入任意字符退出]"
+    read flag
+    if [ ${flag}x != x ];then
+        exit
+    fi
+    cd `dirname ${res}`
+    echo "==> 正在使用check50检查作业："
+    check50 cs50/2019/x/speller | tee  ~/.submit50/check.tmp
+    passed=$(cat ~/.submit50/check.tmp | grep ":)" | wc -l)
+    warnings=$(cat ~/.submit50/check.tmp | grep ":|" | wc -l)
+    errors=$(cat ~/.submit50/check.tmp | grep ":(" | wc -l)
+    if [ $warnings = 0 -a $errors = 0 -a $passed = 0 ];then
+        echo "<错误> 使用check50检查失败，请稍后重试"
+        exit
+    fi
+    echo "==> 您本次检测结果如下: ";echo
+    echo -e "\033[32m [Passed]    $passed \033[0m"
+    echo -e "\033[33m [Warnings]  $warnings \033[0m"
+    echo -e "\033[31m [Errors]    $errors \033[0m";echo
+
+    echo -e "$passed $warnings $errors" >> ~/.submit50/check.tmp
+    echo "==> 请问您是否要将本次的结果打包提交? （可多次提交，成绩评判将以最后一次提交为准）"
+    echo -n "[按下ENTER键继续或者输入任意字符退出]"
+    read flag
+    if [ ${flag}x = x ];then
+        echo "==> 正在打包。。。"
+        if [ ! -d ~/.submit50/${stuid}/ ];then
+            mkdir -p ~/.submit50/${stuid}/
+        fi
+        num=1
+        while [ -f ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip ]; do
+            num=$((num+1))
+        done
+        zippwd=`echo $stuid | base64 -i`
+        mkdir -p ~/.submit50/tmp
+        cp "${res[0]}" ~/.submit50/tmp/
+        cp "${res[1]}" ~/.submit50/tmp/
+        cp ~/.submit50/check.tmp ~/.submit50/tmp/
+        zip -P "$zippwd" -j ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip ~/.submit50/tmp/* > /dev/null
+        rm -rf ~/.submit50/tmp/
+        echo "==> 打包完成，正在上传"
+        upload ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip ${problem_num}
+        echo "==> 上传完毕，您的代码正在后台编译运行。。。"
+        md5=(`md5sum  ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip`)
+        echo "==> 本次提交的hash值为：${md5[0]}"
+
+        rm -f ~/.submit50/check.tmp
+        exit
+    else
+        rm -f ~/.submit50/check.tmp
+        exit
+    fi
 ;;
 4)
     echo "<错误> 尚未布置该作业"

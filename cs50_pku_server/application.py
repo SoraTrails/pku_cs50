@@ -1,6 +1,8 @@
 import os
 import re
-
+import redis
+import hashlib
+import logging
 from cs50 import SQL
 from flask import Flask, flash, redirect, render_template, request, session, url_for, send_from_directory
 from flask_session import Session
@@ -13,10 +15,15 @@ from helpers import apology, login_required, lookup, usd, check_stuid
 # Ensure environment variable is set
 if not os.environ.get("API_KEY"):
     raise RuntimeError("API_KEY not set")
+if not os.environ.get("UPLOAD_FOLDER"):
+    raise RuntimeError("UPLOAD_FOLDER not set")
 
 # Configure application
 app = Flask(__name__)
 app.secret_key = 'some_secret'
+
+rcon = redis.StrictRedis(host='localhost', db=5)
+prodcons_queue = 'task:prodcons:queue'
 
 # Ensure templates are auto-reloaded
 app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -42,7 +49,7 @@ Session(app)
 # Configure CS50 Library to use SQLite database
 db = SQL("sqlite:///finance.db")
 
-UPLOAD_FOLDER = '/root/submited_works'
+UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER")
 # UPLOAD_FOLDER = 'submited_works'
 ALLOWED_EXTENSIONS = set(['zip'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -54,6 +61,7 @@ def allowed_file(filename):
 
 @app.route("/hackathon")
 def index():
+    app.logger.info(request.remote_addr+" GET /hackathon")
     return render_template("index.html")
 
 # @app.route("/")
@@ -62,6 +70,7 @@ def index():
 
 @app.route("/about")
 def about():
+    app.logger.info(request.remote_addr+" GET /about")
     return render_template("about.html")
 
 @app.route("/version", methods=["GET", "POST"])
@@ -70,35 +79,28 @@ def version():
         stuid = request.form.get("stuid")
         name = request.form.get("name")
         #TODO: check stuid & name (check_stuid 语法上已实现);
-        #TODO: log
-        # print("get version :{}_{}".format(stuid,name))
-        return send_from_directory("/root/submited_works","version", as_attachment=True)
+        app.logger.info(request.remote_addr+" POST /version : {}_{}".format(stuid,name))
+        return send_from_directory(UPLOAD_FOLDER ,"version", as_attachment=True)
     return '<h1>Bad Request</h1>', 400
 
 @app.route("/update", methods=["GET", "POST"])
 def update():
     if request.method == 'POST':
-        #TODO: log
-        return send_from_directory("/root/submited_works","pku_submit50.c", as_attachment=True)
+        stuid = request.form.get("stuid")
+        name = request.form.get("name")
+        app.logger.info(request.remote_addr+" POST /update : {}_{}".format(stuid,name))
+        return send_from_directory(UPLOAD_FOLDER ,"pku_submit50.c", as_attachment=True)
     return '<h1>Bad Request</h1>', 400
 
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
     if request.method == 'POST':
         file = request.files['file']
-        #TODO: post data加入作业号以验证？
         if file and allowed_file(file.filename):
             # filename = secure_filename(file.filename)
             stuid = request.form.get("stuid")
             stuname = request.form.get("name")
             work = request.form.get("work")
-            # filename = file.filename
-            # names=filename.split('_')
-            # if len(names) <= 2:
-                # return '<h1>name error</h1>', 406
-            # stuid=names[0]
-            # stuname=names[1]
-            # work=names[2]
             #TODO: check stuid & name
             path = os.path.join(app.config['UPLOAD_FOLDER'], work, stuid+"_"+stuname)
             if not os.path.exists(path):
@@ -115,10 +117,17 @@ def upload():
                 return '<h1>Unknown error</h1>', 405
             file.save(os.path.join(path,filename))
             #TODO: log
-            print("{}_{} submit hw{}".format(stuid, stuname, work))
-            # if int(work) == 3:
-                # print("{}_{}".format(stuid,stuname))
-
+            app.logger.info(request.remote_addr+" POST /upload : {}_{}_homework_{}".format(stuid,stuname,work))
+            # print("{}_{} submit hw{}".format(stuid, stuname, work))
+            if int(work) == 3:
+                f=open(os.path.join(path,filename),'rb')
+                md5=hashlib.md5(f.read()).hexdigest()
+                f.close()
+                rcon.lpush(prodcons_queue, "{} {} {}".format(path, filename, md5))
+                app.logger.info(request.remote_addr+" INFO pasring : {}".format(os.path.join(path,filename)))
+                app.logger.info(request.remote_addr+" INFO hash : {}".format(md5))
+                # print("pasring {} ...".format(os.path.join(path,filename)))
+                # print("hash {} ...".format(md5))
             return '<h1>Upload Succeeded</h1>', 200
         return '<h1>Bad File</h1>', 400
     return '<h1>Bad Request</h1>', 400
