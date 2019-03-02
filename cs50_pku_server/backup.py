@@ -41,7 +41,7 @@ class Task(object):
             stuid = r[0]
             name = r[1]
             try:
-                res=subprocess.check_output("./backup.sh {} {}".format(path,filename), shell=True)
+                res=subprocess.check_output("bash ./backup.sh {} {}".format(path,filename), shell=True)
                 status = 0
                 exe_time = res.decode('utf-8')
                 if not is_float(exe_time):
