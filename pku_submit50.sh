@@ -328,6 +328,7 @@ case $flag in
     echo -e "\033[33m [Warnings]  $warnings \033[0m"
     echo -e "\033[31m [Errors]    $errors \033[0m";echo
 
+    echo -e "`date`" >> ~/.submit50/check.tmp
     echo -e "$passed $warnings $errors" >> ~/.submit50/check.tmp
     echo "==> 请问您是否要将本次的结果打包提交? （可多次提交，成绩评判将以最后一次提交为准）"
     echo -n "[按下ENTER键继续或者输入任意字符退出]"

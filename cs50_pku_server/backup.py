@@ -60,7 +60,7 @@ class Task(object):
                 stuid=stuid, hash=md5)
             if len(rows) != 1:
                 print("UNKNOWN ERROR")
-                self.db.execute("INSERT INTO submit(stuid,name, exe_time,hash,status) VALUES(:stuid, :name, :exe_time,:hash,:status)",
+                self.db.execute("INSERT INTO submit(stuid,name,time, exe_time,hash,status) VALUES(:stuid, :name,datetime('now','+8 hour'), :exe_time,:hash,:status)",
                     stuid=stuid,name=name, exe_time=exe_time, hash=md5,status=status)
             else:
                 # print("INFO SQL:INSERT INTO submit(stuid,name, exe_time,hash,status) VALUES({}, {}, {}, {},{})".format(stuid,name, exe_time, md5,status))
