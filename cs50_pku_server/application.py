@@ -172,7 +172,7 @@ def upload():
                 rcon.lpush(prodcons_queue, "{} {} {}".format(path, filename, md5))
                 app.logger.info(request.remote_addr+" "+get_time()+" INFO pasring : {}".format(os.path.join(path,filename)))
                 app.logger.info(request.remote_addr+" "+get_time()+" INFO hash : {}".format(md5))
-                db.execute("INSERT INTO submit(stuid, name, exe_time,hash,status) VALUES(:stuid,:name,0,:hash,-1)",
+                db.execute("INSERT INTO submit(stuid, name, time, exe_time,hash,status) VALUES(:stuid,:name,datetime('now','+8 hour'),0,:hash,-1)",
                     stuid=stuid, name=stuname, hash=md5)
                 # print("pasring {} ...".format(os.path.join(path,filename)))
                 # print("hash {} ...".format(md5))

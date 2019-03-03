@@ -22,8 +22,10 @@
                     <td>{{r[1]}}</td>
                     <td>{{r[2]}}</td>
                     <td>{{r[3]}}</td>
-                    {% if r[4] == '运行正常' %}
+                    {% if r[4] == '运行结果正常' %}
                         <td><font color="green">{{r[4]}}</font></td>
+                    {% elif r[4] == '正在运行' %}
+                        <td><font color="blue">{{r[4]}}</font></td>
                     {% else %}
                         <td><font color="red">{{r[4]}}</font></td>
                     {% endif %}
