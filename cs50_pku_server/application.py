@@ -79,15 +79,17 @@ def index():
 @app.route("/query",methods=["GET", "POST"])
 def query():
     if request.method == 'GET':
+        app.logger.info(request.remote_addr+" "+get_time()+" GET /query")
         return render_template("query.html")
     else:
+        app.logger.info(request.remote_addr+" "+get_time()+" POST /query")
         stuid = request.form.get("stuid")
         rows = db.execute("SELECT stuid,time,exe_time,hash,status FROM submit WHERE submit.stuid=:stuid ORDER BY time DESC",stuid=stuid)
         result=[]
         for r in rows:
             exe_time="NaN"
             if r["status"] == 0:
-                status="运行正常"
+                status="运行结果正常"
                 exe_time=str(r["exe_time"])+"s"
             elif r["status"] == 1:
                 status="编译错误"
@@ -95,6 +97,8 @@ def query():
                 status="结果错误"
             elif r["status"] == 3:
                 status="运行时错误"
+            elif r["status"] == -1:
+                status="正在运行"
             else:
                 status="其他错误"
             tmp=[r["stuid"], exe_time, r["time"], r["hash"], status]
@@ -168,6 +172,8 @@ def upload():
                 rcon.lpush(prodcons_queue, "{} {} {}".format(path, filename, md5))
                 app.logger.info(request.remote_addr+" "+get_time()+" INFO pasring : {}".format(os.path.join(path,filename)))
                 app.logger.info(request.remote_addr+" "+get_time()+" INFO hash : {}".format(md5))
+                db.execute("INSERT INTO submit(stuid, name, exe_time,hash,status) VALUES(:stuid,:name,0,:hash,-1)",
+                    stuid=stuid, name=stuname, hash=md5)
                 # print("pasring {} ...".format(os.path.join(path,filename)))
                 # print("hash {} ...".format(md5))
             return '<h1>Upload Succeeded</h1>', 200

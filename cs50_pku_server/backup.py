@@ -2,6 +2,7 @@ from cs50 import SQL
 import redis
 import os
 import subprocess
+import datetime
 def is_float(s):
     s = str(s)
     if s.isdigit():
@@ -13,6 +14,10 @@ def is_float(s):
         if left.isdigit() and right.isdigit():
             return True
     return False
+
+def get_time():
+    i = datetime.datetime.now()
+    return "{}/{}/{} {}:{}:{}".format(i.year, i.month, i.day, i.hour, i.minute, i.second)
 
 class Task(object):
     def __init__(self):
@@ -28,7 +33,7 @@ class Task(object):
             path=str(task[0])
             filename=str(task[1])
             md5=str(task[2])
-            print(path, filename, md5)
+            print("INFO {}".format(get_time()), path, filename, md5)
             if not path or not filename or not md5:
                 print("error")
                 continue
@@ -50,10 +55,17 @@ class Task(object):
                 print("exit code {}".format(e.returncode))
                 exe_time = 0
                 status = e.returncode
-            
-            print("INFO SQL:INSERT INTO submit(stuid,name, exe_time,hash,status) VALUES({}, {}, {}, {},{})".format(stuid,name, exe_time, md5,status))
-            self.db.execute("INSERT INTO submit(stuid,name, exe_time,hash,status) VALUES(:stuid, :name, :exe_time,:hash,:status)",
-                stuid=stuid,name=name, exe_time=exe_time, hash=md5,status=status)
+
+            rows=self.db.execute("SELECT stuid FROM submit WHERE stuid=:stuid AND hash=:hash AND status=-1",
+                stuid=stuid, hash=md5)
+            if len(rows) != 1:
+                print("UNKNOWN ERROR")
+                self.db.execute("INSERT INTO submit(stuid,name, exe_time,hash,status) VALUES(:stuid, :name, :exe_time,:hash,:status)",
+                    stuid=stuid,name=name, exe_time=exe_time, hash=md5,status=status)
+            else:
+                # print("INFO SQL:INSERT INTO submit(stuid,name, exe_time,hash,status) VALUES({}, {}, {}, {},{})".format(stuid,name, exe_time, md5,status))
+                self.db.execute("UPDATE submit SET exe_time=:exe_time, status=:status WHERE stuid=:stuid AND hash=:hash AND status=-1",
+                    stuid=stuid, exe_time=exe_time, hash=md5, status=status)
             
 
 if __name__ == '__main__':
