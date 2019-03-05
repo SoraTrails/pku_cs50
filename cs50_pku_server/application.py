@@ -64,17 +64,36 @@ def get_time():
     i = datetime.datetime.now()
     return "{}/{}/{} {}:{}:{}".format(i.year, i.month, i.day, i.hour, i.minute, i.second)
 
+@app.route("/")
+def red():
+    # app.logger.info(request.remote_addr+" GET /")
+    return redirect("hackathon")
+
 @app.route("/hackathon")
 def index():
-    app.logger.info(request.remote_addr+" "+get_time()+" GET /hackathon")
-    rows = db.execute("SELECT stuid,name,time,exe_time,hash FROM submit where status=0 GROUP BY stuid HAVING MIN(exe_time) ORDER BY exe_time")
+    return redirect("homework2")
+
+@app.route("/homework2")
+def homework2():
+    app.logger.info(request.remote_addr+" "+get_time()+" GET /homework2")
+    rows = db.execute("SELECT stuid,name,time,hash,correct_num FROM submit where status=0 AND work=2 GROUP BY stuid HAVING MAX(time) ORDER BY time DESC")
+    result=[]
+    for res in rows:
+        tmp=[res["stuid"], res["name"], res["time"], res["hash"], res["correct_num"]]
+        result.append(tmp)
+    return render_template("homework2.html", result=result)
+
+@app.route("/homework3")
+def homework3():
+    app.logger.info(request.remote_addr+" "+get_time()+" GET /homework3")
+    rows = db.execute("SELECT stuid,name,time,exe_time,hash FROM submit where status=0 AND work=3 GROUP BY stuid HAVING MIN(exe_time) ORDER BY exe_time")
     order=1
     result=[]
     for res in rows:
-        tmp=[order, res["stuid"],res["exe_time"],res["time"],res["hash"]]
+        tmp=[order, res["stuid"], res["name"],res["exe_time"],res["time"],res["hash"]]
         result.append(tmp)
         order=order+1
-    return render_template("index.html", result=result)
+    return render_template("homework3.html", result=result)
 
 @app.route("/query",methods=["GET", "POST"])
 def query():
@@ -84,13 +103,21 @@ def query():
     else:
         app.logger.info(request.remote_addr+" "+get_time()+" POST /query")
         stuid = request.form.get("stuid")
-        rows = db.execute("SELECT stuid,time,exe_time,hash,status FROM submit WHERE submit.stuid=:stuid ORDER BY time DESC",stuid=stuid)
+        rows = db.execute("SELECT stuid,time,exe_time,hash,status,work,correct_num FROM submit WHERE submit.stuid=:stuid ORDER BY time DESC",stuid=stuid)
         result=[]
         for r in rows:
-            exe_time="NaN"
+            # correct_num="\\"
+            correct_num=r["correct_num"]
+            exe_time="\\"
             if r["status"] == 0:
-                status="运行结果正常"
-                exe_time=str(r["exe_time"])+"s"
+                status="运行结果正确"
+                if r["work"] == 3:
+                    exe_time=str(r["exe_time"])+"s"
+                else:
+                    if r["work"] == 2 and correct_num != 15:
+                        status="部分测试未通过"
+                    # elif r["work"] == 4 and correct_num != 15:
+                    # correct_num=r["correct_num"]
             elif r["status"] == 1:
                 status="编译错误"
             elif r["status"] == 2:
@@ -101,16 +128,10 @@ def query():
                 status="正在运行"
             else:
                 status="其他错误"
-            tmp=[r["stuid"], exe_time, r["time"], r["hash"], status]
+            tmp=[r["stuid"], r["work"], exe_time, r["time"], r["hash"], correct_num, status]
             result.append(tmp)
         return render_template("queried.html", result=result)
 
-
-
-# @app.route("/")
-# def red():
-#     app.logger.info(request.remote_addr+" GET /")
-#     return redirect("hackathon")
 
 @app.route("/about")
 def about():
@@ -145,15 +166,17 @@ def upload():
             stuid = request.form.get("stuid")
             stuname = request.form.get("name")
             work = request.form.get("work")
+            correct_num = request.form.get("correct_num")
             if not stuid or not stuname or not work:
                 return '<h1>Bad Request</h1>', 400
             #TODO: check stuid & name
-            path = os.path.join(app.config['UPLOAD_FOLDER'], work, stuid+"_"+stuname)
+            # path = os.path.join(app.config['UPLOAD_FOLDER'], work, stuid+"_"+stuname)
+            path = os.path.join(app.config['UPLOAD_FOLDER'], work, str(stuid))
             if not os.path.exists(path):
                 os.makedirs(path)
             submitted=os.listdir(path)
             # filename=filename.replace(re.findall(r'(_[0-9]+.zip)', filename)[0], "_1.zip")
-            filename="{}_{}_{}_1.zip".format(stuid,stuname,work)
+            filename="{}_{}_1.zip".format(stuid,work)
             if len(submitted) > 0:
                 num=[]
                 for p in submitted:
@@ -163,17 +186,21 @@ def upload():
                 return '<h1>Unknown error</h1>', 405
             file.save(os.path.join(path,filename))
             #TODO: log
-            app.logger.info(request.remote_addr+" "+get_time()+" POST /upload : {}_{}_homework_{}".format(stuid,stuname,work))
+            app.logger.info(request.remote_addr+" "+get_time()+" POST /upload : {}_homework_{}".format(stuid,work))
             # print("{}_{} submit hw{}".format(stuid, stuname, work))
-            if int(work) == 3:
+            if int(work) in [2, 3, 4]:
                 f=open(os.path.join(path,filename),'rb')
                 md5=hashlib.md5(f.read()).hexdigest()
                 f.close()
-                rcon.lpush(prodcons_queue, "{} {} {}".format(path, filename, md5))
-                app.logger.info(request.remote_addr+" "+get_time()+" INFO pasring : {}".format(os.path.join(path,filename)))
-                app.logger.info(request.remote_addr+" "+get_time()+" INFO hash : {}".format(md5))
-                db.execute("INSERT INTO submit(stuid, name, time, exe_time,hash,status) VALUES(:stuid,:name,datetime('now','+8 hour'),0,:hash,-1)",
-                    stuid=stuid, name=stuname, hash=md5)
+                if int(work) == 3:
+                    rcon.lpush(prodcons_queue, "{} {} {}".format(path, filename, md5))
+                    app.logger.info(request.remote_addr+" "+get_time()+" INFO pasring : {}".format(os.path.join(path,filename)))
+                    app.logger.info(request.remote_addr+" "+get_time()+" INFO hash : {}".format(md5))
+                    db.execute("INSERT INTO submit(stuid, name, time,work, exe_time,hash,status,correct_num ) VALUES(:stuid,:name,datetime('now','+8 hour'),:work, 0,:hash,-1, :correct_num)",
+                        stuid=stuid, name=stuname, work=int(work), hash=md5, correct_num=correct_num)
+                else:
+                    db.execute("INSERT INTO submit(stuid, name, time,work, exe_time,hash,status,correct_num ) VALUES(:stuid,:name,datetime('now','+8 hour'),:work, 0,:hash,0, :correct_num)",
+                        stuid=stuid, name=stuname, work=int(work), hash=md5, correct_num=correct_num)
                 # print("pasring {} ...".format(os.path.join(path,filename)))
                 # print("hash {} ...".format(md5))
             return '<h1>Upload Succeeded</h1>', 200
@@ -190,3 +217,5 @@ for code in default_exceptions:
     app.errorhandler(code)(errorhandler)
 
 
+# TODO 是否需要按提交时间倒序排序
+# TODO 姓名包含在文件名中带来的问题

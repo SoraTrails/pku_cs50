@@ -40,11 +40,11 @@ class Task(object):
             # print("pasring {} ...".format(os.path.join(path,filename)))
             # print("hash {} ...".format(md5))
             r=filename.split("_")
-            if len(r) < 3:
+            if len(r) < 2:
                 print("error2")
                 continue
             stuid = r[0]
-            name = r[1]
+            # name = r[1]
             try:
                 res=subprocess.check_output("bash ./backup.sh {} {}".format(path,filename), shell=True)
                 status = 0
@@ -60,8 +60,8 @@ class Task(object):
                 stuid=stuid, hash=md5)
             if len(rows) != 1:
                 print("UNKNOWN ERROR")
-                self.db.execute("INSERT INTO submit(stuid,name,time, exe_time,hash,status) VALUES(:stuid, :name,datetime('now','+8 hour'), :exe_time,:hash,:status)",
-                    stuid=stuid,name=name, exe_time=exe_time, hash=md5,status=status)
+                self.db.execute("INSERT INTO submit(stuid,name,work,time, exe_time,hash,status) VALUES(:stuid, :name,3,datetime('now','+8 hour'), :exe_time,:hash,:status)",
+                    stuid=stuid,name=stuid, exe_time=exe_time, hash=md5,status=status)
             else:
                 # print("INFO SQL:INSERT INTO submit(stuid,name, exe_time,hash,status) VALUES({}, {}, {}, {},{})".format(stuid,name, exe_time, md5,status))
                 self.db.execute("UPDATE submit SET exe_time=:exe_time, status=:status WHERE stuid=:stuid AND hash=:hash AND status=-1",

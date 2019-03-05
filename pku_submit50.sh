@@ -1,5 +1,5 @@
 #! /bin/bash
-version=(1 3)
+version=(1 4)
 # 修改版本需要三步：
 # pku_submit50.sh中的version
 # rz提交，运行build.sh
@@ -19,7 +19,7 @@ input_name_id(){
         echo -n "姓名:"
         read name
     done
-    echo $name > ~/.submit50/config
+    echo $name | sed 's/[[:space:]]//g'  > ~/.submit50/config
 
     echo -n "学号:"
     read stuid
@@ -67,7 +67,7 @@ update(){
     name=`sed -n 1p ~/.submit50/config`
     stuid=`sed -n 2p ~/.submit50/config`
     # TODO: curl debug
-    code=$(curl -d "name=${name}&stuid=${stuid}" -o /tmp/cs50_pku_version -m 15 -s -w %{http_code} "23.105.208.75/version")
+    code=$(curl -d "name=${name}&stuid=${stuid}" -o /tmp/cs50_pku_version -m 20 -s -w %{http_code} "23.105.208.75/version")
     if [ ${code} != "200" ];then
         echo "<错误> 检查更新失败，错误码：${code}"
         exit
@@ -75,7 +75,7 @@ update(){
     latest_version=(`cat /tmp/cs50_pku_version`)
     if [ ${latest_version[0]} -gt ${version[0]} -o ${latest_version[0]} -eq ${version[0]} -a ${latest_version[1]} -gt ${version[1]} ];then
         echo "==> 最新版本为${latest_version[0]}.${latest_version[1]}，正在更新。。。"
-        code=$(curl -d "name=${name}&stuid=${stuid}" -o ~/.submit50/pku_submit50.c -m 15 -s -w %{http_code} "23.105.208.75/update")
+        code=$(curl -d "name=${name}&stuid=${stuid}" -o ~/.submit50/pku_submit50.c -m 20 -s -w %{http_code} "23.105.208.75/update")
         if [ ${code} != "200" ];then
             echo "<错误> 更新失败，错误码：${code}"
             exit
@@ -94,7 +94,7 @@ update(){
 upload(){
     name=`sed -n 1p ~/.submit50/config`
     stuid=`sed -n 2p ~/.submit50/config`
-    code=$(curl -F "file=@${1}" -F "name=${name}" -F "stuid=${stuid}" -F "work=${2}" -o /dev/null -m 15 -s -w %{http_code} 23.105.208.75/upload)
+    code=$(curl -F "file=@${1}" -F "name=${name}" -F "stuid=${stuid}" -F "work=${2}" -F "correct_num=${3}" -o /dev/null -m 20 -s -w %{http_code} 23.105.208.75/upload)
     if [ ${code} != "200" ];then
         echo "<错误> 上传失败，错误码：${code}"
         exit
@@ -160,6 +160,10 @@ case $flag in
     fi
 
     echo "==> 正在使用check50检查作业："
+    if [ -f ~/.submit50/check.tmp ];then
+        # echo "<错误> 检测到您当前已在运行pku_submit50，请等待上传完成再运行。若未在运行，请联系助教"
+        rm -f ~/.submit50/check.tmp
+    fi
     check50 cs50/${year}/x/scratch | tee  ~/.submit50/check.tmp
     passed=$(cat ~/.submit50/check.tmp | grep ":)" | wc -l)
     warnings=$(cat ~/.submit50/check.tmp | grep ":|" | wc -l)
@@ -173,6 +177,8 @@ case $flag in
     echo -e "\033[33m [Warnings]  $warnings \033[0m"
     echo -e "\033[31m [Errors]    $errors \033[0m";echo
 
+    echo -e "`date`" >> ~/.submit50/check.tmp
+    echo -e "${stuid}_${name}" >> ~/.submit50/check.tmp
     echo -e "$passed $warnings $errors" >> ~/.submit50/check.tmp
     echo "==> 请问您是否要将本次的结果打包提交? （可多次提交，成绩评判将以最后一次提交为准）"
     echo -n "[按下ENTER键继续或者输入任意字符退出]"
@@ -193,7 +199,7 @@ case $flag in
         zip -P "$zippwd" -j ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip ~/.submit50/tmp/* > /dev/null
         rm -rf ~/.submit50/tmp/
         echo "==> 打包完成，正在上传"
-        upload ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip ${problem_num}
+        upload ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip ${problem_num} ${passed}
         echo "==> 上传完毕"
         #，这是您对作业${problem_num}的第${num}次提交
         rm -f ~/.submit50/check.tmp
@@ -237,6 +243,10 @@ case $flag in
     cd `dirname ${res}`
 
     echo "==> 正在使用check50检查作业："
+    if [ -f ~/.submit50/check.tmp ];then
+        # echo "<错误> 检测到您当前已在运行pku_submit50，请等待上传完成再运行。若未在运行，请联系助教"
+        rm -f ~/.submit50/check.tmp
+    fi
     check50 cs50/2018/spring/credit | tee  ~/.submit50/check.tmp
     passed=$(cat ~/.submit50/check.tmp | grep ":)" | wc -l)
     warnings=$(cat ~/.submit50/check.tmp | grep ":|" | wc -l)
@@ -250,6 +260,8 @@ case $flag in
     echo -e "\033[33m [Warnings]  $warnings \033[0m"
     echo -e "\033[31m [Errors]    $errors \033[0m";echo
 
+    echo -e "`date`" >> ~/.submit50/check.tmp
+    echo -e "${stuid}_${name}" >> ~/.submit50/check.tmp
     echo -e "$passed $warnings $errors" >> ~/.submit50/check.tmp
     echo "==> 请问您是否要将本次的结果打包提交? （可多次提交，成绩评判将以最后一次提交为准）"
     echo -n "[按下ENTER键继续或者输入任意字符退出]"
@@ -270,9 +282,10 @@ case $flag in
         zip -P "$zippwd" -j ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip ~/.submit50/tmp/* > /dev/null
         rm -rf ~/.submit50/tmp/
         echo "==> 打包完成，正在上传"
-        upload ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip ${problem_num}
+        upload ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip ${problem_num}  ${passed}
         echo "==> 上传完毕"
-        #，这是您对作业${problem_num}的第${num}次提交
+        md5=(`md5sum  ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip`)
+        echo "==> 本次提交的hash值为：${md5[0]}"
         rm -f ~/.submit50/check.tmp
         exit
     else
@@ -315,6 +328,10 @@ case $flag in
     fi
     cd `dirname ${res}`
     echo "==> 正在使用check50检查作业："
+    if [ -f ~/.submit50/check.tmp ];then
+        # echo "<错误> 检测到您当前已在运行pku_submit50，请等待上传完成再运行。若未在运行，请联系助教"
+        rm -f ~/.submit50/check.tmp
+    fi
     check50 cs50/2019/x/speller | tee  ~/.submit50/check.tmp
     passed=$(cat ~/.submit50/check.tmp | grep ":)" | wc -l)
     warnings=$(cat ~/.submit50/check.tmp | grep ":|" | wc -l)
@@ -329,6 +346,7 @@ case $flag in
     echo -e "\033[31m [Errors]    $errors \033[0m";echo
 
     echo -e "`date`" >> ~/.submit50/check.tmp
+    echo -e "${stuid}_${name}" >> ~/.submit50/check.tmp
     echo -e "$passed $warnings $errors" >> ~/.submit50/check.tmp
     echo "==> 请问您是否要将本次的结果打包提交? （可多次提交，成绩评判将以最后一次提交为准）"
     echo -n "[按下ENTER键继续或者输入任意字符退出]"
@@ -350,7 +368,7 @@ case $flag in
         zip -P "$zippwd" -j ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip ~/.submit50/tmp/* > /dev/null
         rm -rf ~/.submit50/tmp/
         echo "==> 打包完成，正在上传"
-        upload ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip ${problem_num}
+        upload ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip ${problem_num}  ${passed}
         echo "==> 上传完毕，您的代码正在后台编译运行。。。"
         md5=(`md5sum  ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip`)
         echo "==> 本次提交的hash值为：${md5[0]}"

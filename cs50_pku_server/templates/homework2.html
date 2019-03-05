@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Query Result
+    
 {% endblock %}
 
 {% block main %}
@@ -9,12 +9,10 @@
         <thead>
             <tr>
                 <th>学号</th>
-                <th>作业号</th>
-                <th>运行用时</th>
+                <th>姓名</th>
                 <th>提交时间</th>
                 <th>提交hash值</th>
                 <th>pass数</th>
-                <th>状态</th>
             </tr>
         </thead>
         <tbody>
@@ -24,20 +22,13 @@
                     <td>{{r[1]}}</td>
                     <td>{{r[2]}}</td>
                     <td>{{r[3]}}</td>
-                    <td>{{r[4]}}</td>
-                    <td>{{r[5]}}</td>
-                    {% if r[6] == '运行结果正确' %}
-                        <td><font color="green">{{r[6]}}</font></td>
-                    {% elif r[6] == '正在运行' %}
-                        <td><font color="blue">{{r[6]}}</font></td>
+                    {% if r[4] == 15 %}
+                        <td><font color="green">{{r[4]}}/15</font></td>
                     {% else %}
-                        <td><font color="red">{{r[6]}}</font></td>
+                        <td><font color="red">{{r[4]}}/15</font></td>
                     {% endif %}
                 </tr>
             {% endfor %}
         </tbody>
     </table>
-    <form action="/hackathon" method="get">
-        <button class="btn btn-primary" type="submit">return</button>
-    </form>
 {% endblock %}

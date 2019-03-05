@@ -1,5 +1,10 @@
 # !/bin/bash
-submited_path=/root/submited_works
+if [ -z ${SUBMITED_PATH} ];then
+    submited_path=/root/submited_works
+else
+    submited_path=${SUBMITED_PATH}
+fi
+
 text_path=tscs50
 keys_path=kscs50
 path=${1}
