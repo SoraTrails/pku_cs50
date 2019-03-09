@@ -50,6 +50,10 @@ Session(app)
 # Configure CS50 Library to use SQLite database
 db = SQL("sqlite:///speller.db")
 
+pass_num={1:8,2:15,3:9,41:3,42:9,43:10,44:10}
+status_list={0:"运行结果正确",1:"编译错误",2:"结果错误",3:"运行时错误",-1:"正在运行"}
+hw4_list={41:"4.Hello",42:"4.Mario",43:"4.Cash",44:"4.Credit"}
+
 UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER")
 # UPLOAD_FOLDER = 'submited_works'
 ALLOWED_EXTENSIONS = set(['zip'])
@@ -75,6 +79,7 @@ def index():
 
 @app.route("/homework2")
 def homework2():
+    session["status"]="hw2"
     app.logger.info(request.remote_addr+" "+get_time()+" GET /homework2")
     rows = db.execute("SELECT stuid,name,time,hash,correct_num FROM submit where status=0 AND work=2 GROUP BY stuid HAVING MAX(time) ORDER BY time DESC")
     result=[]
@@ -85,6 +90,7 @@ def homework2():
 
 @app.route("/homework3")
 def homework3():
+    session["status"]="hw3"
     app.logger.info(request.remote_addr+" "+get_time()+" GET /homework3")
     rows = db.execute("SELECT stuid,name,time,exe_time,hash FROM submit where status=0 AND work=3 GROUP BY stuid HAVING MIN(exe_time) ORDER BY exe_time")
     order=1
@@ -95,8 +101,25 @@ def homework3():
         order=order+1
     return render_template("homework3.html", result=result)
 
+@app.route("/homework4/<name>")
+def homework4(name):
+    dic={"hello":41,"mario":42,"cash":43,"credit":44}
+    work = dic.get(name)
+    if not work:
+        return '<h1>Unknown homework</h1>', 400
+    session["status"]=name[0].upper()+name[1:]
+    app.logger.info(request.remote_addr+" "+get_time()+" GET /homework4/"+name)
+
+    rows = db.execute("SELECT stuid,name,time,hash,correct_num FROM submit where status=0 AND work=:work GROUP BY stuid HAVING MAX(time) ORDER BY time DESC", work=work)
+    result=[]
+    for res in rows:
+        tmp=[res["stuid"], res["name"], res["time"], res["hash"], res["correct_num"]]
+        result.append(tmp)
+    return render_template("homework4.html", result=result, pass_num=pass_num.get(work))
+
 @app.route("/query",methods=["GET", "POST"])
 def query():
+    session["status"]="query"
     if request.method == 'GET':
         app.logger.info(request.remote_addr+" "+get_time()+" GET /query")
         return render_template("query.html")
@@ -109,32 +132,27 @@ def query():
             # correct_num="\\"
             correct_num=r["correct_num"]
             exe_time="\\"
+            status = status_list.get(r["status"])         
+            if not status:
+                status="其他错误"
+
             if r["status"] == 0:
-                status="运行结果正确"
                 if r["work"] == 3:
                     exe_time=str(r["exe_time"])+"s"
                 else:
-                    if r["work"] == 2 and correct_num != 15:
+                    if correct_num != pass_num[r["work"]]:
                         status="部分测试未通过"
-                    # elif r["work"] == 4 and correct_num != 15:
-                    # correct_num=r["correct_num"]
-            elif r["status"] == 1:
-                status="编译错误"
-            elif r["status"] == 2:
-                status="结果错误"
-            elif r["status"] == 3:
-                status="运行时错误"
-            elif r["status"] == -1:
-                status="正在运行"
-            else:
-                status="其他错误"
-            tmp=[r["stuid"], r["work"], exe_time, r["time"], r["hash"], correct_num, status]
+            work=r["work"]
+            if work >= 41 and work <= 44:
+                work=hw4_list[r["work"]]
+            tmp=[r["stuid"], work, exe_time, r["time"], r["hash"], correct_num, status]
             result.append(tmp)
         return render_template("queried.html", result=result)
 
 
 @app.route("/about")
 def about():
+    session["status"]="about"
     app.logger.info(request.remote_addr+" "+get_time()+" GET /about")
     return render_template("about.html")
 
@@ -188,7 +206,7 @@ def upload():
             #TODO: log
             app.logger.info(request.remote_addr+" "+get_time()+" POST /upload : {}_homework_{}".format(stuid,work))
             # print("{}_{} submit hw{}".format(stuid, stuname, work))
-            if int(work) in [2, 3, 4]:
+            if int(work) in [2, 3, 41, 42, 43, 44]:
                 f=open(os.path.join(path,filename),'rb')
                 md5=hashlib.md5(f.read()).hexdigest()
                 f.close()

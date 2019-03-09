@@ -54,5 +54,10 @@ for file in $filelist ;do
     rm -f ./tmp/${file}*
 done
 
+rm -rf ${submited_path}/speller/dictionary.*
+rm -f ${submited_path}/speller/check.tmp
+rm -f ${submited_path}/speller/speller
+rm -rf ${submited_path}/speller/*.o
+
 echo -n ${sum}
 exit 0
