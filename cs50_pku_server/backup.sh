@@ -11,7 +11,7 @@ clean(){
     rm -f ${submited_path}/speller/speller
     rm -rf ${submited_path}/speller/*.o
     rm -rf ${submited_path}/speller/tmp/*
-    
+
     echo "${stuid} end" >> ${error_path}
     echo
 }
@@ -22,7 +22,8 @@ keys_path=kscs50
 path=${1}
 name=${2}
 stuid=`echo ${name} | cut -d '_' -f 1`
-echo "${stuid} start" >> ${error_path}
+echo -n "${stuid} start" >> ${error_path}
+TZ='Asia/Shanghai' date >> ${error_path}
 
 if [ -z ${stuid} -o ! -f ${path}/${name} ]; then
     exit 4

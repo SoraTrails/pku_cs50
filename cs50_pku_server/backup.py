@@ -50,6 +50,7 @@ class Task(object):
                 status = 0
                 exe_time = res.decode('utf-8')
                 if not is_float(exe_time):
+                    print(exe_time)
                     exe_time = 0
                     status=4
             except subprocess.CalledProcessError as e:
