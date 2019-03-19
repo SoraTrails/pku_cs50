@@ -26,7 +26,7 @@ fi
 # rm -f ${submited_path}/speller/check.tmp
 
 # unzip /root/speller.zip 
-unzip -P `echo ${stuid} | base64 -i` ${path}/${name} -d ${submited_path}/speller 2>&1 > /dev/null
+unzip -P `echo ${stuid} | base64 -i` ${path}/${name} -o -d ${submited_path}/speller 2>&1 > /dev/null
 cd ${submited_path}/speller/
 
 rm -f core speller *.o
