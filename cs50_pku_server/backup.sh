@@ -13,7 +13,7 @@ clean(){
     rm -rf ${submited_path}/speller/tmp/*
 
     echo "${stuid} end" >> ${error_path}
-    echo
+    echo >> ${error_path}
 }
 error_path=${submited_path}/speller/error_info
 
