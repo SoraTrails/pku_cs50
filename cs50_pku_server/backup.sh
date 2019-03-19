@@ -10,13 +10,19 @@ clean(){
     rm -f ${submited_path}/speller/check.tmp
     rm -f ${submited_path}/speller/speller
     rm -rf ${submited_path}/speller/*.o
+    rm -rf ${submited_path}/speller/tmp/*
+    
+    echo "${stuid} end" >> ${error_path}
+    echo
 }
+error_path=${submited_path}/speller/error_info
 
 text_path=tscs50
 keys_path=kscs50
 path=${1}
 name=${2}
 stuid=`echo ${name} | cut -d '_' -f 1`
+echo "${stuid} start" >> ${error_path}
 
 if [ -z ${stuid} -o ! -f ${path}/${name} ]; then
     exit 4
@@ -26,13 +32,13 @@ fi
 # rm -f ${submited_path}/speller/check.tmp
 
 # unzip /root/speller.zip 
-unzip -P `echo ${stuid} | base64 -i` ${path}/${name} -o -d ${submited_path}/speller 2>&1 > /dev/null
+unzip -P `echo ${stuid} | base64 -i` ${path}/${name} -d ${submited_path}/speller 2>&1 >> ${error_path}
 cd ${submited_path}/speller/
 
 rm -f core speller *.o
-clang -fsanitize=signed-integer-overflow -fsanitize=undefined -ggdb3 -O0 -Qunused-arguments -std=c11 -Wall -Werror -Wextra -Wno-sign-compare -Wshadow   -c -o speller.o speller.c 2>&1 > /dev/null
-clang -fsanitize=signed-integer-overflow -fsanitize=undefined -ggdb3 -O0 -Qunused-arguments -std=c11 -Wall -Werror -Wextra -Wno-sign-compare -Wshadow   -c -o dictionary.o dictionary.c 2>&1 > /dev/null
-clang -fsanitize=signed-integer-overflow -fsanitize=undefined -ggdb3 -O0 -Qunused-arguments -std=c11 -Wall -Werror -Wextra -Wno-sign-compare -Wshadow -o speller speller.o dictionary.o 2>&1 > /dev/null
+clang -fsanitize=signed-integer-overflow -fsanitize=undefined -ggdb3 -O0 -Qunused-arguments -std=c11 -Wall -Werror -Wextra -Wno-sign-compare -Wshadow   -c -o speller.o speller.c 2>&1 >> ${error_path}
+clang -fsanitize=signed-integer-overflow -fsanitize=undefined -ggdb3 -O0 -Qunused-arguments -std=c11 -Wall -Werror -Wextra -Wno-sign-compare -Wshadow   -c -o dictionary.o dictionary.c 2>&1 >> ${error_path}
+clang -fsanitize=signed-integer-overflow -fsanitize=undefined -ggdb3 -O0 -Qunused-arguments -std=c11 -Wall -Werror -Wextra -Wno-sign-compare -Wshadow -o speller speller.o dictionary.o 2>&1 >> ${error_path}
 
 if [ $? != 0 -o ! -f ./speller ]; then
     clean
