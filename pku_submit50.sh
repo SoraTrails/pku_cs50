@@ -287,6 +287,7 @@ case $flag in
         echo "==> 上传完毕"
         md5=(`md5sum  ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip`)
         echo "==> 本次提交的hash值为：${md5[0]}"
+        echo "==> 访问 http://soratrails.me/homework${problem_num} 查看您的提交"
         rm -f ~/.submit50/check.tmp
         exit
     else
@@ -373,6 +374,7 @@ case $flag in
         echo "==> 上传完毕，您的代码正在后台编译运行。。。"
         md5=(`md5sum  ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip`)
         echo "==> 本次提交的hash值为：${md5[0]}"
+        echo "==> 访问 http://soratrails.me/homework${problem_num} 查看您的提交"
 
         rm -f ~/.submit50/check.tmp
         exit
@@ -490,6 +492,7 @@ case $flag in
         echo "==> 上传完毕"
         md5=(`md5sum  ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip`)
         echo "==> 本次提交的hash值为：${md5[0]}"
+        echo "==> 访问 http://soratrails.me/homework4/${file_name} 查看您的提交"
         rm -f ~/.submit50/check.tmp
         exit
     else

@@ -5,9 +5,10 @@
 {% endblock %}
 
 {% block main %}
+    <q>输入学号查询你的所有提交</q>
     <form action="/query" method="post">
         <div class="form-group">
-            <input autocomplete="off" autofocus class="form-control" name="stuid" placeholder="学号" type="text"/>
+            <input autocomplete="off" autofocus class="form-control" name="stuid" placeholder="学号" type="number"/>
         </div>
         <button class="btn btn-primary" type="submit">Query</button>
     </form>
