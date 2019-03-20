@@ -50,6 +50,7 @@ main table
 {
     /* left-align contents */
     text-align: left;
+    font-size: large;
 }
 
 .nav-link {
@@ -64,6 +65,12 @@ main table
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
     padding: 10px 20px;
 }
+.dropdown-content p{
+    padding: 5px 0;
+}
 .nav-link:hover .dropdown-content {
     display: block;
 }
+.p-5 {
+    padding:1rem !important;
+  }

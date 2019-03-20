@@ -81,7 +81,7 @@ def index():
 def homework2():
     session["status"]="hw2"
     app.logger.info(request.remote_addr+" "+get_time()+" GET /homework2")
-    rows = db.execute("SELECT stuid,name,time,hash,correct_num FROM submit where status=0 AND work=2 GROUP BY stuid HAVING MAX(time) ORDER BY time DESC")
+    rows = db.execute("SELECT stuid,name,time,hash,correct_num FROM submit where status=0 AND work=2 GROUP BY stuid HAVING MAX(time) ORDER BY correct_num DESC, time ASC")
     result=[]
     for res in rows:
         tmp=[res["stuid"], res["name"], res["time"], res["hash"], res["correct_num"]]
@@ -110,12 +110,12 @@ def homework4(name):
     session["status"]=name[0].upper()+name[1:]
     app.logger.info(request.remote_addr+" "+get_time()+" GET /homework4/"+name)
 
-    rows = db.execute("SELECT stuid,name,time,hash,correct_num FROM submit where status=0 AND work=:work GROUP BY stuid HAVING MAX(time) ORDER BY time DESC", work=work)
+    rows = db.execute("SELECT stuid,name,time,hash,correct_num FROM submit where status=0 AND work=:work GROUP BY stuid HAVING MAX(time) ORDER BY correct_num DESC, time ASC", work=work)
     result=[]
     for res in rows:
         tmp=[res["stuid"], res["name"], res["time"], res["hash"], res["correct_num"]]
         result.append(tmp)
-    return render_template("homework4.html", result=result, pass_num=pass_num.get(work))
+    return render_template("homework4.html", result=result, pass_num=pass_num.get(work), name=name)
 
 @app.route("/query",methods=["GET", "POST"])
 def query():
