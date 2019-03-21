@@ -53,7 +53,36 @@ db = SQL("sqlite:///speller.db")
 pass_num={1:8,2:15,3:9,41:3,42:9,43:10,44:10}
 status_list={0:"运行结果正确",1:"编译错误",2:"结果错误",3:"运行时错误",-1:"正在运行"}
 hw4_list={41:"4.Hello",42:"4.Mario",43:"4.Cash",44:"4.Credit"}
-
+colloge_list={
+"1500012773":"信科",
+"1500012883":"信科",
+"1500012971":"信科",
+"1500014922":"哲学",
+"1500015140":"国关",
+"1500015492":"经济",
+"1500016249":"法学",
+"1500018107":"元培",
+"1500091102":"生科",
+"1600012410":"地空",
+"1600012915":"信科",
+"1600013533":"环境",
+"1600015446":"经济",
+"1700011387":"物理",
+"1700011785":"化学",
+"1700011790":"化学",
+"1700013206":"城环",
+"1700092824":"光华",
+"1800017717":"元培",
+"1800017720":"元培",
+"1800017852":"元培",
+"1800022735":"软微",
+"1800091815":"新闻",
+"1800920576":"光华",
+"1801213672":"信科",
+"1802010793":"光华",
+"1810301325":"医学",
+"1810305201":"医学",
+}
 UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER")
 # UPLOAD_FOLDER = 'submited_works'
 ALLOWED_EXTENSIONS = set(['zip'])
@@ -84,7 +113,11 @@ def homework2():
     rows = db.execute("SELECT stuid,name,time,hash,correct_num FROM submit where status=0 AND work=2 GROUP BY stuid HAVING MAX(time) ORDER BY correct_num DESC, time ASC")
     result=[]
     for res in rows:
-        tmp=[res["stuid"], res["name"], res["time"], res["hash"], res["correct_num"]]
+        stuid=str(res["stuid"])
+        colloge=colloge_list.get(stuid)
+        if not colloge:
+            colloge="Unknown"
+        tmp=[stuid, colloge, res["name"], res["time"], res["hash"], res["correct_num"]]
         result.append(tmp)
     return render_template("homework2.html", result=result)
 
@@ -96,7 +129,12 @@ def homework3():
     order=1
     result=[]
     for res in rows:
-        tmp=[order, res["stuid"], res["name"],res["exe_time"],res["time"],res["hash"]]
+        stuid=str(res["stuid"])
+        colloge=colloge_list.get(stuid)
+        if not colloge:
+            colloge="Unknown"
+
+        tmp=[order, stuid,colloge, res["name"],res["exe_time"],res["time"],res["hash"]]
         result.append(tmp)
         order=order+1
     return render_template("homework3.html", result=result)
@@ -113,7 +151,11 @@ def homework4(name):
     rows = db.execute("SELECT stuid,name,time,hash,correct_num FROM submit where status=0 AND work=:work GROUP BY stuid HAVING MAX(time) ORDER BY correct_num DESC, time ASC", work=work)
     result=[]
     for res in rows:
-        tmp=[res["stuid"], res["name"], res["time"], res["hash"], res["correct_num"]]
+        stuid=str(res["stuid"])
+        colloge=colloge_list.get(stuid)
+        if not colloge:
+            colloge="Unknown"
+        tmp=[stuid,colloge, res["name"], res["time"], res["hash"], res["correct_num"]]
         result.append(tmp)
     return render_template("homework4.html", result=result, pass_num=pass_num.get(work), name=name)
 

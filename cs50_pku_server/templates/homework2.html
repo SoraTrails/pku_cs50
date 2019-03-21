@@ -14,6 +14,7 @@
         <thead>
             <tr>
                 <th>学号</th>
+                <th>院系</th>
                 <th>姓名</th>
                 <th>提交时间</th>
                 <th>提交hash值</th>
@@ -27,10 +28,11 @@
                     <td>{{r[1]}}</td>
                     <td>{{r[2]}}</td>
                     <td>{{r[3]}}</td>
-                    {% if r[4] == 15 %}
-                        <td><font color="green">{{r[4]}}/15</font></td>
+                    <td>{{r[4]}}</td>
+                    {% if r[5] == 15 %}
+                        <td><font color="green">{{r[5]}}/15</font></td>
                     {% else %}
-                        <td><font color="red">{{r[4]}}/15</font></td>
+                        <td><font color="red">{{r[5]}}/15</font></td>
                     {% endif %}
                 </tr>
             {% endfor %}
