@@ -1,5 +1,5 @@
 #! /bin/bash
-version=(2 0)
+version=(2 1)
 ip=23.105.208.75
 # 修改版本需要三步：
 # pku_submit50.sh中的version
