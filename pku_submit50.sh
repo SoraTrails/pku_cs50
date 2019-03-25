@@ -1,5 +1,5 @@
 #! /bin/bash
-version=(1 4)
+version=(2 0)
 ip=23.105.208.75
 # 修改版本需要三步：
 # pku_submit50.sh中的version
@@ -110,7 +110,7 @@ stuid=`sed -n 2p ~/.submit50/config`
 update
 echo "==> 请选择所要提交的作业:"
 echo "    [1] 第一次sctrach作业"
-echo "    [2] 第二次作业"
+echo "    [2] 第二次c语言credit作业"
 echo "    [3] 第三次作业"
 echo "    [4] 第四次作业"
 echo "    [5] 第五次作业"
@@ -119,8 +119,8 @@ read flag
 case $flag in
 1)
     problem_num=1
-    # echo "作业1已过期，无法提交"
-    # exit
+    echo "作业1已过期，无法提交"
+    exit
     if [ "$1"x != x ];then
         path=$(readlink -f $1)
     else
@@ -212,8 +212,8 @@ case $flag in
 ;;
 2)
     problem_num=2
-    echo "<错误> 尚未布置该作业"
-    exit
+    # echo "<错误> 尚未布置该作业"
+    # exit
     if [ "$1"x != x ];then
         path=$(readlink -f $1)
     else
