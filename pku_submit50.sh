@@ -243,6 +243,16 @@ case $flag in
     fi
     cd `dirname ${res}`
 
+    code=`cat credit.c | sed "s/\r//g" | sed 's/\/\/.*//g' | sed ':a;N;s/\n//g;ta' | sed 's/\/\*.*\*\///g'`
+    test_case="371449635398431 378282246310005 5555555555554444 4111111111111111 5105105105105100 4012888888881881"
+    for c in ${test_case}; do
+        trick=`echo ${code} | grep "${c}"`
+        if [ -n "${trick}" ]; then
+            echo "<错误> 检测到您可能在代码中非法使用了测试用例，如有疑问请联系助教"
+            exit 1
+        fi    
+    done
+    
     echo "==> 正在使用check50检查作业："
     if [ -f ~/.submit50/check.tmp ];then
         # echo "<错误> 检测到您当前已在运行pku_submit50，请等待上传完成再运行。若未在运行，请联系助教"
@@ -264,6 +274,8 @@ case $flag in
     echo -e "`date`" >> ~/.submit50/check.tmp
     echo -e "${stuid}_${name}" >> ~/.submit50/check.tmp
     echo -e "${passed} ${warnings} ${errors}" >> ~/.submit50/check.tmp
+    
+
     echo "==> 请问您是否要将本次的结果打包提交? （可多次提交，成绩评判将以最后一次提交为准）"
     echo -n "[按下ENTER键继续或者输入任意字符退出]"
     read flag
