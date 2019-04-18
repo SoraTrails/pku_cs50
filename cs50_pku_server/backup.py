@@ -46,6 +46,8 @@ class Task(object):
             stuid = r[0]
             # name = r[1]
             try:
+                # res=subprocess.check_output("nice -n -20 bash ./backup.sh {} {}".format(path,filename), shell=True)
+                # res=subprocess.check_output("bash ./backup.sh {} {}".format(path,filename), shell=True, timeout=150)
                 res=subprocess.check_output("bash ./backup.sh {} {}".format(path,filename), shell=True)
                 status = 0
                 exe_time = res.decode('utf-8')
@@ -57,6 +59,14 @@ class Task(object):
                 print("exit code {}".format(e.returncode))
                 exe_time = 0
                 status = e.returncode
+            # except subprocess.TimeoutExpired:
+            #     print("time out")
+            #     exe_time = 0
+            #     status = 4
+            except: 
+                print("err")
+                exe_time = 0
+                status = 4
 
             rows=self.db.execute("SELECT stuid FROM submit WHERE stuid=:stuid AND hash=:hash AND status=-1",
                 stuid=stuid, hash=md5)

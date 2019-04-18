@@ -33,13 +33,13 @@ fi
 # rm -f ${submited_path}/speller/check.tmp
 
 # unzip /root/speller.zip 
-unzip -P `echo ${stuid} | base64 -i` ${path}/${name} -d ${submited_path}/speller 2>&1 >> ${error_path}
+unzip -P `echo ${stuid} | base64 -i` ${path}/${name} -d ${submited_path}/speller >> ${error_path} 2>&1 
 cd ${submited_path}/speller/
 
 rm -f core speller *.o
-clang -fsanitize=signed-integer-overflow -fsanitize=undefined -ggdb3 -O0 -Qunused-arguments -std=c11 -Wall -Werror -Wextra -Wno-sign-compare -Wshadow   -c -o speller.o speller.c 2>&1 >> ${error_path}
-clang -fsanitize=signed-integer-overflow -fsanitize=undefined -ggdb3 -O0 -Qunused-arguments -std=c11 -Wall -Werror -Wextra -Wno-sign-compare -Wshadow   -c -o dictionary.o dictionary.c 2>&1 >> ${error_path}
-clang -fsanitize=signed-integer-overflow -fsanitize=undefined -ggdb3 -O0 -Qunused-arguments -std=c11 -Wall -Werror -Wextra -Wno-sign-compare -Wshadow -o speller speller.o dictionary.o 2>&1 >> ${error_path}
+clang -fsanitize=signed-integer-overflow -fsanitize=undefined -ggdb3 -O0 -Qunused-arguments -std=c11 -Wall -Werror -Wextra -Wno-sign-compare -Wshadow   -c -o speller.o speller.c >> ${error_path} 2>&1 
+clang -fsanitize=signed-integer-overflow -fsanitize=undefined -ggdb3 -O0 -Qunused-arguments -std=c11 -Wall -Werror -Wextra -Wno-sign-compare -Wshadow   -c -o dictionary.o dictionary.c >> ${error_path} 2>&1
+clang -fsanitize=signed-integer-overflow -fsanitize=undefined -ggdb3 -O0 -Qunused-arguments -std=c11 -Wall -Werror -Wextra -Wno-sign-compare -Wshadow -o speller speller.o dictionary.o >> ${error_path} 2>&1
 
 if [ $? != 0 -o ! -f ./speller ]; then
     clean
@@ -61,7 +61,7 @@ for file in $filelist ;do
 	temp1=(`md5sum ./tmp/${file}`)
 	temp2=(`md5sum ./${keys_path}/${file}`)
 	if [ ${temp1[0]} != ${temp2[0]} ];then
-	    echo "error: ${file}"
+	    echo "error: ${file}" | tee ${error_path}
         clean
         exit 3
 	fi

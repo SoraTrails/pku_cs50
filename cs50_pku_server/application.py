@@ -11,7 +11,7 @@ from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
-from helpers import apology, login_required, lookup, usd, check_stuid
+from helpers import apology, login_required, lookup, usd, check_stuid,Reversinator
 
 # Ensure environment variable is set
 if not os.environ.get("API_KEY"):
@@ -82,6 +82,9 @@ colloge_list={
 "1802010793":"光华",
 "1810301325":"医学",
 "1810305201":"医学",
+"1234567890":"test",
+"1234567891":"test",
+"1234567892":"test"
 }
 UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER")
 # UPLOAD_FOLDER = 'submited_works'
@@ -100,11 +103,11 @@ def get_time():
 @app.route("/")
 def red():
     # app.logger.info(request.remote_addr+" GET /")
-    return redirect("hackathon")
+    return redirect("homework3")
 
 @app.route("/hackathon")
 def index():
-    return redirect("homework2")
+    return redirect("homework3")
 
 @app.route("/homework2")
 def homework2():
@@ -125,18 +128,22 @@ def homework2():
 def homework3():
     session["status"]="hw3"
     app.logger.info(request.remote_addr+" "+get_time()+" GET /homework3")
-    rows = db.execute("SELECT stuid,name,time,exe_time,hash FROM submit where status=0 AND work=3 GROUP BY stuid HAVING MIN(exe_time) ORDER BY exe_time")
-    order=1
     result=[]
-    for res in rows:
-        stuid=str(res["stuid"])
-        colloge=colloge_list.get(stuid)
-        if not colloge:
-            colloge="Unknown"
-
-        tmp=[order, stuid,colloge, res["name"],res["exe_time"],res["time"],res["hash"]]
-        result.append(tmp)
-        order=order+1
+    ids = db.execute("select distinct stuid from submit where work=3")
+    for id in ids:
+        rows = db.execute("SELECT stuid,name,time,exe_time,hash,correct_num,status FROM submit where work=3 and stuid=:stuid ORDER BY correct_num desc, exe_time asc, time desc", stuid=id["stuid"])
+        if rows:
+            res=rows[0]
+            stuid=str(res["stuid"])
+            colloge=colloge_list.get(stuid)
+            if not colloge:
+                colloge="Unknown"
+            status = status_list.get(res["status"])
+            if not status:
+                status="其他错误"
+            tmp=[stuid, colloge, res["name"],res["exe_time"],res["time"],res["hash"],int(res["correct_num"]),status]
+            result.append(tmp)
+    result.sort(key=lambda x: (-x[6],x[3],Reversinator(x[4])))
     return render_template("homework3.html", result=result)
 
 @app.route("/homework4/<name>")
