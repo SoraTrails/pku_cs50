@@ -1,5 +1,5 @@
 #! /bin/bash
-version=(2 1)
+version=(3 0)
 ip=23.105.208.75
 # 修改版本需要三步：
 # pku_submit50.sh中的version
@@ -111,7 +111,7 @@ update
 echo "==> 请选择所要提交的作业:"
 echo "    [1] 第一次sctrach作业"
 echo "    [2] 第二次c语言credit作业"
-echo "    [3] 第三次作业"
+echo "    [3] 第三次c语言speller作业"
 echo "    [4] 第四次作业"
 echo "    [5] 第五次作业"
 echo -n "==> 请输入作业数字号:"
@@ -340,7 +340,41 @@ case $flag in
     if [ ${flag}x != x ];then
         exit
     fi
+
     cd `dirname ${res}`
+    echo "==> 即将本地检查您的作业,是否继续？"
+    echo -n "[按下ENTER键继续或者输入任意字符跳过本地检查直接使用check50检查并提交]"
+    read flag
+    if [ ${flag}x == x ];then
+        if [ ! -f ./speller ];then
+            echo "<错误> 未找到可执行文件speller，请先编译您的代码"
+            exit 1
+        fi
+        filelist=`ls ./texts/`
+        sum=0
+        for file in ${filelist} ;do
+            echo -n "==> 正在验证文件 ${file} ... "
+            ./speller ./dictionaries/large ./texts/${file} 2>&1 > ./${file}.res
+            if [ $? != 0 ];then
+                echo -e "\n<错误> 检测到运行时错误，请打开文件${file}.res查看错误信息"
+                exit 2
+            fi
+
+            cat ./${file}.res | head --lines=-6 > /tmp/${file}
+            temp1=(`md5sum /tmp/${file}`)
+            temp2=(`md5sum ./keys/${file}`)
+            if [ ${temp1[0]} != ${temp2[0]} ];then
+                echo -e "\n<错误> 结果错误，请保证代码中没有打印额外信息，打开文件${file}.res查看程序输出"
+                exit 3
+            fi
+            result=$(tail -2 ./${file}.res | awk '{print $4}')
+            sum=$(echo "${result}+${sum}" | bc)
+            rm -f ${file}.res /tmp/${file}
+            echo -e "\033[32m 通过 \033[0m"
+        done
+        echo "==> 全部测试用例通过，您的本地运行时间为 ${sum}s，该运行时间仅供参考"
+    fi
+
     echo "==> 正在使用check50检查作业："
     if [ -f ~/.submit50/check.tmp ];then
         # echo "<错误> 检测到您当前已在运行pku_submit50，请等待上传完成再运行。若未在运行，请联系助教"
@@ -362,7 +396,8 @@ case $flag in
     echo -e "`date`" >> ~/.submit50/check.tmp
     echo -e "${stuid}_${name}" >> ~/.submit50/check.tmp
     echo -e "${passed} ${warnings} ${errors}" >> ~/.submit50/check.tmp
-    echo "==> 请问您是否要将本次的结果打包提交? （可多次提交，成绩评判将以最后一次提交为准）"
+    echo "==> 请问您是否要将本次的结果打包提交? "
+    echo "==>（可多次提交，本次作业成绩评判将以在服务器上运行最快的一次提交为准）"
     echo -n "[按下ENTER键继续或者输入任意字符退出]"
     read flag
     if [ ${flag}x = x ];then
@@ -386,7 +421,8 @@ case $flag in
         echo "==> 上传完毕，您的代码正在后台编译运行。。。"
         md5=(`md5sum  ~/.submit50/${stuid}/${stuid}_${name}_${problem_num}_${num}.zip`)
         echo "==> 本次提交的hash值为：${md5[0]}"
-        echo "==> 访问 http://soratrails.me/homework${problem_num} 查看您的提交"
+        echo "==> 访问 http://soratrails.me/query 查询您的提交"
+        echo "==> 查看排名请访问 http://soratrails.me/homework${problem_num} "
 
         rm -f ~/.submit50/check.tmp
         exit
