@@ -4,6 +4,7 @@ import redis
 import hashlib
 import logging
 import datetime
+import time
 from cs50 import SQL
 from flask import Flask, flash, redirect, render_template, request, session, url_for, send_from_directory
 from flask_session import Session
@@ -103,10 +104,12 @@ def get_time():
 @app.route("/")
 def red():
     # app.logger.info(request.remote_addr+" GET /")
+    time.sleep(2)
     return redirect("homework3")
 
 @app.route("/hackathon")
 def index():
+    time.sleep(2)
     return redirect("homework3")
 
 @app.route("/homework2")
