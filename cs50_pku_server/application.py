@@ -48,6 +48,10 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
+@app.route('/robots.txt')
+def static_from_root():
+    return send_from_directory(app.static_folder, request.path[1:])
+
 # Configure CS50 Library to use SQLite database
 db = SQL("sqlite:///speller.db")
 
