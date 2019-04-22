@@ -1,5 +1,5 @@
 #! /bin/bash
-version=(3 1)
+version=(3 2)
 ip=23.105.208.75
 # 修改版本需要三步：
 # pku_submit50.sh中的version
@@ -354,7 +354,7 @@ case $flag in
         sum=0
         for file in ${filelist} ;do
             echo -n "==> 正在验证文件 ${file} ... "
-            ./speller ./dictionaries/large ./texts/${file} 2>&1 > ./${file}.res
+            ./speller ./dictionaries/large ./texts/${file} > ./${file}.res 2>&1
             if [ $? != 0 ];then
                 echo -e "\n<错误> 检测到运行时错误，请打开文件${file}.res查看错误信息"
                 exit 2
