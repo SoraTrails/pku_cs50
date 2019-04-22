@@ -138,7 +138,7 @@ def homework3():
     result=[]
     ids = db.execute("select distinct stuid from submit where work=3")
     for id in ids:
-        rows = db.execute("SELECT stuid,name,time,exe_time,hash,correct_num,status FROM submit where work=3 and stuid=:stuid ORDER BY correct_num desc, exe_time asc, time desc", stuid=id["stuid"])
+        rows = db.execute("SELECT stuid,name,time,exe_time,hash,correct_num,status FROM submit where work=3 and stuid=:stuid ORDER BY correct_num desc, status asc, time asc", stuid=id["stuid"])
         if rows:
             res=rows[0]
             stuid=str(res["stuid"])

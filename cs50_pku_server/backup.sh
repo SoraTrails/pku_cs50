@@ -33,7 +33,7 @@ fi
 # rm -f ${submited_path}/speller/check.tmp
 
 # unzip /root/speller.zip 
-unzip -P `echo ${stuid} | base64 -i` ${path}/${name} -d ${submited_path}/speller >> ${error_path} 2>&1 
+unzip -P `echo ${stuid} | base64 -i` -o ${path}/${name} -d ${submited_path}/speller >> ${error_path} 2>&1 
 cd ${submited_path}/speller/
 
 rm -f core speller *.o
