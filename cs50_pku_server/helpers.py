@@ -14,7 +14,7 @@ class Reversinator(object):
     def __init__(self, obj):
         self.obj = obj
     def __lt__(self, other):
-        return other.obj < self.obj
+        return other.obj > self.obj
 
 def apology(message, code=400):
     """Render message as an apology to user."""

@@ -138,7 +138,7 @@ def homework3():
     result=[]
     ids = db.execute("select distinct stuid from submit where work=3")
     for id in ids:
-        rows = db.execute("SELECT stuid,name,time,exe_time,hash,correct_num,status FROM submit where work=3 and stuid=:stuid ORDER BY correct_num desc, status asc, time asc", stuid=id["stuid"])
+        rows = db.execute("SELECT stuid,name,time,exe_time,hash,correct_num,status FROM submit where work=3 and stuid=:stuid ORDER BY correct_num desc, status asc, exe_time asc, time asc", stuid=id["stuid"])
         if rows:
             res=rows[0]
             stuid=str(res["stuid"])
@@ -148,9 +148,13 @@ def homework3():
             status = status_list.get(res["status"])
             if not status:
                 status="其他错误"
-            tmp=[stuid, colloge, res["name"],res["exe_time"],res["time"],res["hash"],int(res["correct_num"]),status]
+            if int(res["status"]) == 0:
+                status_order=0
+            else:
+                status_order=1
+            tmp=[stuid, colloge, res["name"],res["exe_time"],res["time"],res["hash"],int(res["correct_num"]),status,status_order]
             result.append(tmp)
-    result.sort(key=lambda x: (-x[6],x[3],Reversinator(x[4])))
+    result.sort(key=lambda x: (-x[6], x[8], x[3], Reversinator(x[4])))
     return render_template("homework3.html", result=result)
 
 @app.route("/homework4/<name>")
