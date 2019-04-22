@@ -1,5 +1,5 @@
 #! /bin/bash
-version=(3 0)
+version=(3 1)
 ip=23.105.208.75
 # 修改版本需要三步：
 # pku_submit50.sh中的version
@@ -310,8 +310,8 @@ case $flag in
 ;;
 3)
     problem_num=3
-    echo "<错误> 尚未布置该作业"
-    exit
+    # echo "<错误> 尚未布置该作业"
+    # exit
     if [ "$1"x != x ];then
         path=$(readlink -f $1)
     else
