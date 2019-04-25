@@ -56,7 +56,7 @@ def static_from_root():
 db = SQL("sqlite:///speller.db")
 
 pass_num={1:8,2:15,3:9,41:3,42:9,43:10,44:10}
-status_list={0:"运行结果正确",1:"编译错误",2:"结果错误",3:"运行时错误",-1:"正在运行"}
+status_list={0:"运行结果正确",1:"编译错误",2:"运行时错误",3:"结果错误",-1:"正在运行"}
 hw4_list={41:"4.Hello",42:"4.Mario",43:"4.Cash",44:"4.Credit"}
 colloge_list={
 "1500012773":"信科",
