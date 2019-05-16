@@ -109,12 +109,12 @@ def get_time():
 def red():
     # app.logger.info(request.remote_addr+" GET /")
     time.sleep(2)
-    return redirect("homework3")
+    return redirect("homework4/hello")
 
 @app.route("/hackathon")
 def index():
     time.sleep(2)
-    return redirect("homework3")
+    return redirect("homework4/hello")
 
 @app.route("/homework2")
 def homework2():
