@@ -55,7 +55,7 @@ def static_from_root():
 # Configure CS50 Library to use SQLite database
 db = SQL("sqlite:///speller.db")
 
-pass_num={1:8,2:15,3:9,41:3,42:9,43:10,44:10}
+pass_num={1:8,2:15,3:9,41:3,42:9,43:10,44:10,5:18}
 status_list={0:"运行结果正确",1:"编译错误",2:"运行时错误",3:"结果错误",-1:"正在运行"}
 hw4_list={41:"4.Hello",42:"4.Mario",43:"4.Cash",44:"4.Credit"}
 colloge_list={
@@ -109,12 +109,12 @@ def get_time():
 def red():
     # app.logger.info(request.remote_addr+" GET /")
     time.sleep(2)
-    return redirect("homework4/hello")
+    return redirect("homework5")
 
 @app.route("/hackathon")
 def index():
     time.sleep(2)
-    return redirect("homework4/hello")
+    return redirect("homework5")
 
 @app.route("/homework2")
 def homework2():
@@ -130,6 +130,22 @@ def homework2():
         tmp=[stuid, colloge, res["name"], res["time"], res["hash"], res["correct_num"]]
         result.append(tmp)
     return render_template("homework2.html", result=result)
+
+@app.route("/homework5")
+def homework5():
+    session["status"]="hw5"
+    app.logger.info(request.remote_addr+" "+get_time()+" GET /homework5")
+    rows = db.execute("SELECT stuid,name,time,hash,correct_num FROM submit where status=0 AND work=5 GROUP BY stuid HAVING MAX(time) ORDER BY correct_num DESC, time ASC")
+    result=[]
+    for res in rows:
+        stuid=str(res["stuid"])
+        colloge=colloge_list.get(stuid)
+        if not colloge:
+            colloge="Unknown"
+        tmp=[stuid, colloge, res["name"], res["time"], res["hash"], res["correct_num"]]
+        result.append(tmp)
+    return render_template("homework5.html", result=result)
+
 
 @app.route("/homework3")
 def homework3():
@@ -266,7 +282,7 @@ def upload():
             #TODO: log
             app.logger.info(request.remote_addr+" "+get_time()+" POST /upload : {}_homework_{}".format(stuid,work))
             # print("{}_{} submit hw{}".format(stuid, stuname, work))
-            if int(work) in [2, 3, 41, 42, 43, 44]:
+            if int(work) in [2, 3, 41, 42, 43, 44, 5]:
                 f=open(os.path.join(path,filename),'rb')
                 md5=hashlib.md5(f.read()).hexdigest()
                 f.close()

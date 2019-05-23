@@ -65,6 +65,12 @@
                             </div>
                         </div>
                     </li>
+                    {% if session["status"] == 'hw5' %}
+                        <li class="nav-item"><b><a class="nav-link" href="/homework5">Homework5</a></b></li>
+                    {% else %}
+                        <!-- <li class="nav-item"><a class="nav-link" href="/homework5">Homework5</a></li> -->
+                        <li class="nav-item"><a class="nav-link" href="/homework5">Homework5</a></li>
+                    {% endif %}
                 </ul>
                 <ul class="navbar-nav ml-auto mt-2">
                     {% if session["status"] == 'query' %}

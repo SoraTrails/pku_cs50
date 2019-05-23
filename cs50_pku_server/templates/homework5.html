@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    
+{% endblock %}
+
+{% block main %}
+    <div style="font-size:x-large">
+        <p>
+            计算机科学与编程入门 python & HTML编程小竞赛 作业Similarities
+        </p>
+    </div>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>学号</th>
+                <th>院系</th>
+                <th>姓名</th>
+                <th>提交时间</th>
+                <th>提交hash值</th>
+                <th>pass数</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in result %}
+                <tr>
+                    <td>{{r[0]}}</td>
+                    <td>{{r[1]}}</td>
+                    <td>{{r[2]}}</td>
+                    <td>{{r[3]}}</td>
+                    <td>{{r[4]}}</td>
+                    {% if r[5] == 18 %}
+                        <td><font color="green">{{r[5]}}/18</font></td>
+                    {% else %}
+                        <td><font color="red">{{r[5]}}/18</font></td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
